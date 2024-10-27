@@ -1,0 +1,17 @@
+.text-green {
+    color: #9dd13e;
+}
+
+.payment-bg {
+    background-image: url("../images/payment-bg.jpg");
+    background-repeat: no-repeat;
+    background-position: center center;
+    min-height: 249px;
+    max-width: 562px;
+    padding: 10px;
+}
+
+hr.dash-line {
+    border-top: 2px dashed #bebebe;
+    width: 450px;
+}
