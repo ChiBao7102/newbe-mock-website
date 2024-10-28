@@ -7,14 +7,14 @@ class RemittanceCreateRequest extends FormRequest
     public function rules()
     {
         return [
-            'amount' => 'required|numeric',
-            'appId' => 'required|string|max:255',
+            'timestamp' => 'required',
+            'order_sn' => 'required|string|max:255',
+            'amount' => 'required|string|max:255',
+            'notify' => 'required|string|max:255',
+            'type' => 'required|string|max:255',
+            'country' => 'required',
             'currency' => 'required|string|max:255',
-            'extra.accountName' => 'required|string|max:255',
-            'extra.accountNo' => 'required|string|max:255',
-            'extra.bankCode' => 'required|in:CPF,EMAIL,PHONE,EVP',
-            'merOrderNo' => 'required|string|max:255',
-            'notifyUrl' => 'required|string|max:255'
+            'payload' => 'required'
         ];
     }
 }

@@ -37,4 +37,9 @@ $router->group([
         'as' => 'callback',
         'uses' => 'MerchantController@retrieve',
     ]);
+
+    $router->get('/gettype', [
+        'as' => 'gettype',
+        'uses' => 'MerchantController@gettype',
+    ]);
 });

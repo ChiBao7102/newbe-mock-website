@@ -26,24 +26,17 @@ class MerchantController extends Controller
         $attributes = $request->only(array_keys($request->rules()));
         try {
             Log::info('createTransaction', $attributes);
-            $attributes['amount'] = (int)$attributes['amount'];
-            $attributes['appId'] = env('APP_ID');
-            $attributes['key'] = env('APP_KEY');
             // Input data (could be any system signature you need to encrypt)
-            $signature = implode('&', array_map(
-                function ($key, $value) {
-                    return $key . '=' . $value;
-                },
-                array_keys($attributes),
-                $attributes
-            ));
-            Log::info('signature', [$signature]);
-            $encryptedSignature = hash('sha256', $signature);
-            unset($attributes['key']);
-            $attributes['sign'] = $encryptedSignature;
-            Log::debug('attributes', [$attributes]);
+            $dataRequest = [
+                'app_id' => env('APP_ID'),
+                'params'=> $attributes
+            ];
+            $key = env('APP_SECRET');
+            $sign = $this->get_md5($dataRequest['params'],$key);
+            $dataRequest['sign'] = $sign;
+            Log::debug('attributes', [$dataRequest]);
             Log::info('url', [env('CREATE_TRANSACTION_URL')]);
-            $data = $this->commonService->postJson($attributes, env('CREATE_TRANSACTION_URL'));
+            $data = $this->commonService->postJson($dataRequest, env('CREATE_TRANSACTION_URL'));
             $dataJson = json_decode($data);
             return $this->successResponse($dataJson);
         } catch (\Exception $e) {
@@ -57,21 +50,14 @@ class MerchantController extends Controller
         $attributes = $request->only(array_keys($request->rules()));
         try {
             Log::info('createRemittance', $attributes);
-            $attributes['amount'] = (int)$attributes['amount'];
-            $attributes['appId'] = env('APP_ID');
-            $attributes['key'] = env('APP_KEY');
-            $queryString = "amount={$attributes['amount']}&appId={$attributes['appId']}&currency={$attributes['currency']}";
-
-            // Manually append the nested 'extra' fields
-            $extraString = "accountName={$attributes['extra']['accountName']}&accountNo={$attributes['extra']['accountNo']}&bankCode={$attributes['extra']['bankCode']}";
-            $queryString .= "&extra={$extraString}";
-
-            // Append the remaining fields
-            $queryString .= "&merOrderNo={$attributes['merOrderNo']}&notifyUrl={$attributes['notifyUrl']}&key={$attributes['key']}";
-            $encryptedSignature = hash('sha256', $queryString);
-            unset($attributes['key']);
-            $attributes['sign'] = $encryptedSignature;
-            $data = $this->commonService->postJson($attributes, env('CREATE_REMITTANCE_URL'));
+            $dataRequest = [
+                'app_id' => env('APP_ID'),
+                'params'=> $attributes
+            ];
+            $key = env('APP_SECRET');
+            $sign = $this->get_md5($dataRequest['params'],$key);
+            $dataRequest['sign'] = $sign;
+            $data = $this->commonService->postJson($dataRequest, env('CREATE_REMITTANCE_URL'));
             $dataJson = json_decode($data);
             return $this->successResponse($dataJson);
         } catch (\Exception $e) {
@@ -146,5 +132,30 @@ class MerchantController extends Controller
             return $this->errorMessage($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
     }
+
+    public function gettype(Request $request){
+        $attributes = [
+            'app_id' => env('APP_ID'),
+            'params'=>[
+                'timestamp' => time(),
+                'currency' => $request->currency,
+            ]
+        ];
+        $key = env('APP_SECRET');
+        $sign = $this->get_md5($attributes['params'],$key);
+        $attributes['sign'] = $sign;
+        $data = $this->commonService->postJson($attributes, 'https://openapi.hashop.link/api/v1/expend.types');
+        Log::info('callbackResponse', [$data]);
+        return $this->successResponse(json_decode($data));
+    }
+
+    public function get_md5($body,$key){
+        ksort($body);
+        reset($body);
+        $sign_str = http_build_query($body);
+        $sign_str .= '&key=' . $key;
+        return md5($sign_str);
+    }
+
 
 }

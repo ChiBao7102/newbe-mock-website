@@ -24,7 +24,6 @@ trait ConsumeExternalService
 
         if(isset($this->secret))
         {
-            $headers['Authorization'] = $this->secret;
             $headers['Accept'] = 'application/json';
         }
         $response = $client->request($method, $requestUrl, [
